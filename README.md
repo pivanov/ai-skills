@@ -19,17 +19,16 @@ npx skills add pivanov/ai-skills@split-tasks --agent claude-code cursor
 
 | Skill | Description | Version |
 |-------|-------------|---------|
-| [split-tasks](./skills/split-tasks) | Split 3+ independent tasks across parallel agents | 1.0.0 |
+| [split-tasks](./split-tasks) | Split 3+ independent tasks across parallel agents | 1.0.0 |
 
 ## Adding New Skills
 
-1. Create a new directory: `mkdir skills/my-skill`
-2. Add `SKILL.md` with frontmatter:
+1. Create a new directory: `mkdir my-skill`
+2. Add `SKILL.md` with frontmatter (quote description if it contains special chars):
    ```yaml
    ---
    name: my-skill
-   version: 1.0.0
-   description: What it does. Triggers: "keyword1", "keyword2".
+   description: "What it does. Triggers: keyword1, keyword2"
    ---
    ```
 3. Update this README and CHANGELOG

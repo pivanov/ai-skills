@@ -1,9 +1,6 @@
 ---
 name: split-tasks
-description: Split 3+ independent tasks across parallel agents for faster execution. Triggers: "run in parallel", "split tasks", "do these at once".
-metadata:
-  author: pivanov
-  version: '1.0.0'
+description: "Split 3+ independent tasks across parallel agents. Triggers: run in parallel, split tasks, do these at once"
 ---
 
 # Split Tasks Across Parallel Agents
