@@ -17,6 +17,7 @@ npx skills add pivanov/ai-skills --list
 | Skill | Description | Version |
 |-------|-------------|---------|
 | [split-tasks](./skills/split-tasks) | Split 3+ independent tasks across parallel agents | 1.0.0 |
+| [architect-workflow](./skills/architect-workflow) | Deterministic AI engineering workflow with multi-agent teams | 1.0.0 |
 
 ## Adding New Skills
 
