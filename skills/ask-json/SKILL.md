@@ -46,7 +46,7 @@ Call the CLI via Bash. Capture stdout; on success it's a single JSON line.
 ### Inline schema (small schemas only)
 
 ```bash
-npx @pivanov/claude-wire@^0.1.5 ask-json \
+npx @pivanov/claude-wire@^0.1.6 ask-json \
   --model sonnet \
   --prompt "Classify this ticket: $TEXT" \
   --schema '{"type":"object","properties":{"label":{"type":"string","enum":["bug","feature","chore"]}},"required":["label"]}'
@@ -77,7 +77,7 @@ cat > /tmp/schema.json <<'EOF'
 }
 EOF
 
-npx @pivanov/claude-wire@^0.1.5 ask-json \
+npx @pivanov/claude-wire@^0.1.6 ask-json \
   --model sonnet \
   --prompt "Rank these PRs by review priority: $PRS" \
   --schema-file /tmp/schema.json
@@ -122,7 +122,7 @@ On **non-zero exit**, stderr is one JSON line: `{ "error": "...", "code": "..." 
 ### 1. Classify (enum)
 
 ```bash
-npx @pivanov/claude-wire@^0.1.5 ask-json \
+npx @pivanov/claude-wire@^0.1.6 ask-json \
   --model sonnet \
   --prompt "Category for: 'Add dark mode toggle'" \
   --schema '{"type":"object","properties":{"label":{"enum":["bug","feature","chore"]}},"required":["label"]}'
@@ -154,7 +154,7 @@ cat > /tmp/todos.json <<'EOF'
 }
 EOF
 
-grep -rn "TODO" src/ | npx @pivanov/claude-wire@^0.1.5 ask-json \
+grep -rn "TODO" src/ | npx @pivanov/claude-wire@^0.1.6 ask-json \
   --model sonnet \
   --schema-file /tmp/todos.json
 ```
@@ -186,7 +186,7 @@ cat > /tmp/triage.json <<'EOF'
 }
 EOF
 
-npx @pivanov/claude-wire@^0.1.5 ask-json \
+npx @pivanov/claude-wire@^0.1.6 ask-json \
   --model sonnet \
   --prompt "Triage these incidents: $INCIDENTS" \
   --schema-file /tmp/triage.json
