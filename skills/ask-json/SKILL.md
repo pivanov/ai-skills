@@ -31,6 +31,16 @@ For those, use the native `Agent` / `Task` tool.
 
 ## Invocation
 
+### Mandatory step: derive a schema FIRST
+
+**Before calling the CLI, always construct a JSON Schema from the user's stated shape.** Do this even if the user didn't explicitly ask for a schema -- if they said "classify as positive/negative/neutral," that IS the schema. The CLI refuses to run without `--schema` or `--schema-file` (exit 4), and calling without one defeats the entire point of the skill.
+
+**Example derivation:**
+- User says: *"Classify this into positive, negative, or neutral as typed JSON"*
+- Derived schema: `{"type":"object","properties":{"sentiment":{"enum":["positive","negative","neutral"]}},"required":["sentiment"]}`
+
+**Red flag:** if you find yourself about to call `ask-json` with only `--prompt` and no `--schema`/`--schema-file`, stop and construct the schema first. No schema = no value over native Agent.
+
 Call the CLI via Bash. Capture stdout; on success it's a single JSON line.
 
 ### Inline schema (small schemas only)
