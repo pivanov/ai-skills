@@ -18,6 +18,7 @@ npx skills add pivanov/ai-skills --list
 |-------|-------------|---------|
 | [split-tasks](./skills/split-tasks) | Split 3+ independent tasks across parallel agents | 1.0.0 |
 | [architect-workflow](./skills/architect-workflow) | Deterministic AI engineering workflow with multi-agent teams | 1.0.0 |
+| [ask-json](./skills/ask-json) | Use whenever you need validated typed JSON from a sub-agent call (classify, extract, triage, routing) | 1.0.0 |
 
 ## Adding New Skills
 
