@@ -29,6 +29,19 @@ If your next thought after an `Agent` call is "now parse the JSON from the respo
 
 For those, use the native `Agent` / `Task` tool.
 
+## Prerequisite: install the binary
+
+This skill invokes the `claude-wire` binary directly (not via `npx`). Many Claude Code permission configurations auto-deny `npx` because it fetches + executes arbitrary packages on every run -- calling the installed binary sidesteps that entirely. Install once:
+
+```bash
+bun add -g @pivanov/claude-wire
+# or: npm install -g @pivanov/claude-wire
+```
+
+Verify `claude-wire --version` prints a version (0.1.6+). After that, every invocation below works without network access or permission prompts.
+
+**Fallback**: if the binary isn't installed and the user's permissions allow it, you can substitute `npx @pivanov/claude-wire@^0.1.6 ask-json ...` for `claude-wire ask-json ...` in any command below. Every flag and exit code is identical. But the binary-first path is strongly preferred.
+
 ## Invocation
 
 ### Mandatory step: derive a schema FIRST
@@ -46,7 +59,7 @@ Call the CLI via Bash. Capture stdout; on success it's a single JSON line.
 ### Inline schema (small schemas only)
 
 ```bash
-npx @pivanov/claude-wire@^0.1.6 ask-json \
+claude-wire ask-json \
   --model sonnet \
   --prompt "Classify this ticket: $TEXT" \
   --schema '{"type":"object","properties":{"label":{"type":"string","enum":["bug","feature","chore"]}},"required":["label"]}'
@@ -77,7 +90,7 @@ cat > /tmp/schema.json <<'EOF'
 }
 EOF
 
-npx @pivanov/claude-wire@^0.1.6 ask-json \
+claude-wire ask-json \
   --model sonnet \
   --prompt "Rank these PRs by review priority: $PRS" \
   --schema-file /tmp/schema.json
@@ -113,7 +126,7 @@ On **non-zero exit**, stderr is one JSON line: `{ "error": "...", "code": "..." 
 | Exit | Meaning | Action |
 |------|---------|--------|
 | 1 | JSON validation / parse error | Simplify the schema or escalate `--model sonnet`. Haiku sometimes misses nested shapes. |
-| 2 | Spawn / process error | `npx` fetches `@pivanov/claude-wire` on demand, so the user shouldn't need to install anything manually. Surface the error message verbatim; common causes are the Claude CLI itself being missing or unauthenticated. |
+| 2 | Spawn / process error | Surface the error message verbatim; common causes are the underlying Claude CLI (`claude`) being missing or unauthenticated, or `claude-wire` itself not installed (run `bun add -g @pivanov/claude-wire`). |
 | 3 | Budget exceeded | Surface the limit to the user; suggest raising `--max-budget-usd` or dropping to a smaller model. |
 | 4 | Invalid args | You built the command wrong. Fix it (most common: malformed `--schema` JSON). |
 
@@ -122,7 +135,7 @@ On **non-zero exit**, stderr is one JSON line: `{ "error": "...", "code": "..." 
 ### 1. Classify (enum)
 
 ```bash
-npx @pivanov/claude-wire@^0.1.6 ask-json \
+claude-wire ask-json \
   --model sonnet \
   --prompt "Category for: 'Add dark mode toggle'" \
   --schema '{"type":"object","properties":{"label":{"enum":["bug","feature","chore"]}},"required":["label"]}'
@@ -154,7 +167,7 @@ cat > /tmp/todos.json <<'EOF'
 }
 EOF
 
-grep -rn "TODO" src/ | npx @pivanov/claude-wire@^0.1.6 ask-json \
+grep -rn "TODO" src/ | claude-wire ask-json \
   --model sonnet \
   --schema-file /tmp/todos.json
 ```
@@ -186,7 +199,7 @@ cat > /tmp/triage.json <<'EOF'
 }
 EOF
 
-npx @pivanov/claude-wire@^0.1.6 ask-json \
+claude-wire ask-json \
   --model sonnet \
   --prompt "Triage these incidents: $INCIDENTS" \
   --schema-file /tmp/triage.json
@@ -207,13 +220,8 @@ npx @pivanov/claude-wire@^0.1.6 ask-json \
 - **Never** invoke the CLI without `--model sonnet` from this skill. The CLI's own default (haiku) exists for script users; from here, we want reliability over raw cost.
 - **Never** read `.data` from stderr on a non-zero exit — stderr is the error envelope (`{ error, code }`), not the success payload.
 
-## Performance Note
+## Troubleshooting
 
-If a workflow calls `/ask-json` in a tight loop, the `npx` cache lookup becomes measurable. Install globally once:
+**"claude-wire: command not found"** -- the user hasn't installed the binary yet. Tell them to run `bun add -g @pivanov/claude-wire` (or `npm install -g @pivanov/claude-wire`) once, then retry.
 
-```bash
-bun add -g @pivanov/claude-wire
-# then call `claude-wire ask-json ...` directly, no npx prefix
-```
-
-For one-off calls, `npx` is fine.
+**"Denied by auto mode classifier"** -- a permission gate is blocking the Bash call. If you used `npx`, switch to the binary path (`claude-wire ask-json ...`) which most auto-mode configs don't flag. If it's the binary itself that got blocked, the user needs to allow-list it via their Claude Code permissions.
