@@ -5,7 +5,7 @@ description: "USE THIS SKILL whenever you need validated typed JSON from a sub-a
 
 # Ask JSON via claude-wire
 
-**Use me when you need structured results.** If you're about to call `Agent` / `Task` and then parse JSON out of free-form text -- stop. Use this skill instead. You get schema-validated data back, not prose. Cheaper model by default (haiku), one round-trip, no regex.
+**Use me when you need structured results.** If you're about to call `Agent` / `Task` and then parse JSON out of free-form text -- stop. Use this skill instead. You get schema-validated data back, not prose. Uses sonnet by default for reliable schema adherence, one round-trip, no regex.
 
 ## When to Use Me
 
@@ -19,7 +19,7 @@ Reach for this skill whenever downstream logic needs a **structured payload**:
 
 If your next thought after an `Agent` call is "now parse the JSON from the response text" -- that's the signal. Use me.
 
-Default model is `haiku` -- cheap and fast. The whole pitch is "don't burn Opus on a classifier."
+**ALWAYS pass `--model sonnet`** when invoking the CLI from this skill. The CLI's own default is `haiku` for CI/script users who know their workload, but sonnet adheres to JSON schemas far more reliably on ad-hoc prompts. Haiku's `--json-schema` compliance is best-effort; it frequently returns prose-wrapped JSON or pure prose for short "classify X" style prompts, producing confusing exit-1 validation errors. Skip the thrash -- start at sonnet.
 
 ## When NOT to Use
 
@@ -47,6 +47,7 @@ Call the CLI via Bash. Capture stdout; on success it's a single JSON line.
 
 ```bash
 npx @pivanov/claude-wire@^0.1.5 ask-json \
+  --model sonnet \
   --prompt "Classify this ticket: $TEXT" \
   --schema '{"type":"object","properties":{"label":{"type":"string","enum":["bug","feature","chore"]}},"required":["label"]}'
 ```
@@ -77,6 +78,7 @@ cat > /tmp/schema.json <<'EOF'
 EOF
 
 npx @pivanov/claude-wire@^0.1.5 ask-json \
+  --model sonnet \
   --prompt "Rank these PRs by review priority: $PRS" \
   --schema-file /tmp/schema.json
 ```
@@ -121,6 +123,7 @@ On **non-zero exit**, stderr is one JSON line: `{ "error": "...", "code": "..." 
 
 ```bash
 npx @pivanov/claude-wire@^0.1.5 ask-json \
+  --model sonnet \
   --prompt "Category for: 'Add dark mode toggle'" \
   --schema '{"type":"object","properties":{"label":{"enum":["bug","feature","chore"]}},"required":["label"]}'
 ```
@@ -152,6 +155,7 @@ cat > /tmp/todos.json <<'EOF'
 EOF
 
 grep -rn "TODO" src/ | npx @pivanov/claude-wire@^0.1.5 ask-json \
+  --model sonnet \
   --schema-file /tmp/todos.json
 ```
 
@@ -183,23 +187,24 @@ cat > /tmp/triage.json <<'EOF'
 EOF
 
 npx @pivanov/claude-wire@^0.1.5 ask-json \
+  --model sonnet \
   --prompt "Triage these incidents: $INCIDENTS" \
   --schema-file /tmp/triage.json
 ```
 
 ## Model Selection
 
-- **haiku** (default): classifications, simple extractions, enum routing. Use first.
-- **sonnet**: nested schemas, longer prompts, tasks where haiku returned invalid data once.
+- **sonnet** (skill default): reliable JSON schema adherence across arbitrary ad-hoc prompts. Use this for every invocation unless you have a specific reason not to.
+- **haiku**: only for known-simple, high-volume batch work (dozens-to-hundreds of near-identical calls) where you've verified haiku handles your specific schema. Opt in via `--model haiku`.
 - **opus**: almost never. Structured extraction doesn't need opus-class reasoning — if you're reaching for opus, reconsider whether this should be a native `Agent` call instead.
 
-Escalation rule: retry at most **once** at the next tier on exit code 1. Don't thrash through all three.
+**On exit code 1 (JSON validation error):** don't blindly retry. Inspect the `error` field: the schema may be impossibly nested, or the prompt is ambiguous. Simplify one of them before retrying. If you must retry, do it at most once.
 
 ## Red Flags
 
 - **Never** use this for tasks that require tool use or file I/O — the CLI has no tool access.
 - **Never** inline a schema longer than ~20 lines into `--schema` — use `--schema-file`.
-- **Never** default to sonnet/opus "to be safe." The point of this skill is cheap.
+- **Never** invoke the CLI without `--model sonnet` from this skill. The CLI's own default (haiku) exists for script users; from here, we want reliability over raw cost.
 - **Never** read `.data` from stderr on a non-zero exit — stderr is the error envelope (`{ error, code }`), not the success payload.
 
 ## Performance Note
